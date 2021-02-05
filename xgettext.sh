@@ -193,10 +193,19 @@ inside_read_block {
     print s
     print "comment("s")" > logfile
   }
-  else if(!NO_C2 && match(s, /read[ \t]+i18n_[^ \t]+/)) { # [c2]
-    m = substr(s, RSTART, RLENGTH)
-    C2[++nC2] = (NO_LOC ? "" : "#: "FILENAME":"NR "\n") "#. " substr(m, index(m, "i"))
-    print "C2["nC2"]("C2[nC2]")" > logfile
+  else if(match(s, /read[ \t]+i18n_[^ \t]+/)) { # [c2]
+    ++nC2
+    if(!NO_C2) {
+      m = substr(s, RSTART, RLENGTH)
+      C2[nC2] = (NO_LOC ? "" : "#: "FILENAME":"NR "\n") "#. " substr(m, index(m, "i"))
+      print "C2["nC2"]("C2[nC2]")" > logfile
+    }
+    # warn about gaps between "read i18n_" lines: these could be due to mispelling "i18n_"
+    C2[nC2,"nr"] = NR
+    if(nC2 > 1 && C2[nC2, "nr"] - C2[nC2 -1, "nr"] != 1) {
+      printf "%s: lines %d-%d: warning: non-contiguous \"read i18n_...\" commands\n",
+        FILENAME, C2[nC2 -1, "nr"], C2[nC2, "nr"] > "/dev/stderr"
+    }
   }
   next
 }
