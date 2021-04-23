@@ -115,6 +115,10 @@ EOF
 
 Use xgettext.sh to generate a .pot file from your script.  You can also use xgettext.sh as a replacement for the standard xgettext command because xgettext.sh runs xgettext on the input file before extracting i18n\_table resources.  By default comments and location information are extracted from the function body, and resource strings are annotated with the variable name they refer to.  You can turn off comments and annotations via xgettext.sh command options.  To affect the standard xgettext run pass xgettext options to xgettext.sh.
 
+**LIMITATION**
+
+**Currently, xgettext.sh is able to parse strings delimited by double quotes only.  Single quotes and the `$''` syntax are not supported. Contact me if you need this feature for your project.**
+
 ```
 Usage: xgettext.sh [OPTIONS] ['--' xgettext_OPTIONS ...] FILE"
 
