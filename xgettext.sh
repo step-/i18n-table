@@ -4,7 +4,7 @@
 # xgettext.sh - augmented xgettext(1) extraction tool
 # (C)2016-2021, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20210424
+# Version: 20210428
 # =============================================================================
 
 # This file runs the standard xgettext command to extract MSGIDs from a shell
@@ -156,6 +156,12 @@ inside_gettext_es {
     # bail out if a string does not end with "\n": besides being invalid
     # i18n_table usage, a missing \n results in a hard-to-find bug
     printf "%s: near line %d: ERROR: MSGID does not end with \"\\n\".\n%s\n",
+      FILENAME, linenum, A[1]A[2] > "/dev/stderr"
+    exit 1
+  }
+  if(A[1]A[2] ~ /.*\\n.*\\n$/) {
+    # bail out if a string matches "\n" anywhere else for the reasons above
+    printf "%s: near line %d: ERROR: \"\\n\" inside MSGID is not allowed.\n%s\n",
       FILENAME, linenum, A[1]A[2] > "/dev/stderr"
     exit 1
   }
