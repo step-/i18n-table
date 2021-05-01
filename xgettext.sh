@@ -4,7 +4,7 @@
 # xgettext.sh - augmented xgettext(1) extraction tool
 # (C)2016-2021, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20210428
+# Version: 20210501
 # =============================================================================
 
 # This file runs the standard xgettext command to extract MSGIDs from a shell
@@ -105,6 +105,7 @@ BEGIN {
   re_one_or_more_double_quoted_strings="\"([^\"]+)\"(([ \\t]*\"[^\"]+\")+)?"
   re_msgid_end = "\"[ \\t]*\\\\$"
   re_msgid_continuation = "\\\\$"
+  re_msgid_ignore_line = "##$"
 }
 
 $0 ~ re_gettext_es_start {
@@ -125,7 +126,11 @@ inside_gettext_es && $0 ~ re_gettext_es_end {
 inside_gettext_es {
   linenum = NR
   s = $0
-  if(s ~ re_msgid_end) {
+  if(s ~ re_msgid_ignore_line) {
+    print "=#("s")" > logfile
+    next
+  }
+  else if(s ~ re_msgid_end) {
     print "=1("s")" > logfile
   }
   else if(s ~ re_msgid_continuation) {
