@@ -100,12 +100,14 @@ BEGIN {
 }
 
 BEGIN {
-  re_gettext_es_start = "^[ \\t]*\\$\\(gettext -es"
-  re_gettext_es_end = "\\)([ \\t]*(#.*))?$" # includes shell comment
-  re_one_or_more_double_quoted_strings="\"([^\"]+)\"(([ \\t]*\"[^\"]+\")+)?"
-  re_msgid_end = "\"[ \\t]*\\\\$"
-  re_msgid_continuation = "\\\\$"
-  re_msgid_ignore_line = "##$"
+  re_gettext_es_start     = @/^[ \t]*\$\(gettext -es/
+  # includes possible shell comment
+  re_gettext_es_end       = @/\)([ \t]*(#.*))?$/
+  # allows MSGID to include escaped double quotes, e.g. "abc\"def"
+  re_double_quoted_string = @/"(\\.|[^"])*"/
+  re_msgid_end            = @/"[ \t]*\\$/
+  re_msgid_continuation   = @/\\$/
+  re_msgid_ignore_line    = @/##$/
 }
 
 $0 ~ re_gettext_es_start {
@@ -146,37 +148,36 @@ inside_gettext_es {
 }
 inside_gettext_es {
   print "got_line("s")" > logfile
-  if(match(s, re_one_or_more_double_quoted_strings, A)) {
-    # A[1] is the first unquoted string
-    # A[2] is a space-delimited list of additional quoted strings and starts with space
-    emit_c0((NO_LOC ? "" : "#: "FILENAME":"linenum), A[1])
-    if(A[2] != "") {
-      nL = split("\""A[2]" \"", L, /"[ \t]+"/)
-      for(i = 2; i < nL; i++) {
-        emit_c0("", L[i])
+  if (nA = patsplit(s, A, re_double_quoted_string)) {
+    # each A[i], i=1...nA, is a string with exterior double quotes
+    for(i = 1; i <= nA; i++) {
+      loc_info = NO_LOC ? "" : ("#: " FILENAME ":" linenum)
+      emit_c0(loc_info, A[i])
+      loc_info = ""
+
+      # i18n_table usage mandates for MSGID to end with "\n"
+      # (otherwise MSGIDs and MSGSTRs get out of sync)
+      if (A[i] !~ /"\\n"$|[^\\]\\n"$/) {
+        printf "%s: near line %d: ERROR: MSGID does not end with \"\\n\".\n%s\n",
+          FILENAME, linenum, A[i] > "/dev/stderr"
+        exit 1
+      }
+
+      # bail out if a string matches "\n" anywhere else for the reasons above
+      if (substr(A[i], 2, length(A[i]) -4) ~ /[^\\]\\n/) {
+        printf "%s: near line %d: ERROR: \"\\n\" inside MSGID is not allowed.\n%s\n",
+          FILENAME, linenum, A[i] > "/dev/stderr"
+        exit 1
       }
     }
-  }
-  if(A[1]A[2] !~ /\\n$/) {
-    # bail out if a string does not end with "\n": besides being invalid
-    # i18n_table usage, a missing \n results in a hard-to-find bug
-    printf "%s: near line %d: ERROR: MSGID does not end with \"\\n\".\n%s\n",
-      FILENAME, linenum, A[1]A[2] > "/dev/stderr"
-    exit 1
-  }
-  if(A[1]A[2] ~ /.*\\n.*\\n$/) {
-    # bail out if a string matches "\n" anywhere else for the reasons above
-    printf "%s: near line %d: ERROR: \"\\n\" inside MSGID is not allowed.\n%s\n",
-      FILENAME, linenum, A[1]A[2] > "/dev/stderr"
-    exit 1
   }
   next
 }
 
 BEGIN {
-  re_i18n_table = "^[ \\t]*(function)?[ \\t]*i18n_table[ \\t]*\\([ \\t]*\\)"
-  re_read_block_start = "^[ \\t]*\\{"
-  re_read_block_end = "^[ \\t]*\\}[ \\t]*<<"
+  re_i18n_table       = @/^[ \t]*(function)?[ \t]*i18n_table[ \t]*\([ \t]*\)/
+  re_read_block_start = @/^[ \t]*\{/
+  re_read_block_end   = @/^[ \t]*\}[ \t]*<</
 }
 
 $0 ~ re_i18n_table {
@@ -233,14 +234,14 @@ inside_read_block {
 }
 
 # emit_c0 prints a c0 line as well as any c1 and c2 lines that got accumulated
-# before the c0 line.
+# before the c0 line; line has exterior double quotes.
 function emit_c0(location, line,   i) {
-  print "emit(\""location"\", \""line"\")" > logfile
+  print "emit("location")("line")" > logfile
   print ""
   if(C2[++iC2]) { print C2[iC2] }
   if(location) { print location }
-  print "msgid \""line"\""
-  if(TEST) { print "msgstr \"[T]"line"\"" }
+  print "msgid "line
+  if(TEST) { print "msgstr \"[T]"substr(line, 2) }
   else     { print "msgstr \"\"" }
 }
 #awk}}}
