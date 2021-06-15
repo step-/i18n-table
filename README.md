@@ -83,7 +83,7 @@ echo "$i18n_hello_world"
 The function name, that is `i18n_table`, must be either the first word in a line or the second word when the first word is `function`.
 Each variable name, like `i18n_hello` in the example above, must start with `i18n_`.  The rest of the name is your choice.  I like to use something descriptive of the English text but any valid identifier will do.
 
-It is worth mentioning that your script _can_ also call `gettext` directly.  There is no requirement that you organize _all_ localization strings in an i18n\_table.  For instance, if you need `ngettext` or `eval_gettext` it might be easier to define the corresponding strings aside from function `i18n_table`.  There are ways to reframe even `ngettext` and `eval_gettext` into the i18n\_table method but the extra work required may not be worth the effort.
+It is worth mentioning that your script _can_ also call `gettext` directly.  You are not required to organize _all_ localization strings in an i18n\_table.  For instance, if you need `ngettext` or `eval_gettext` it might be easier to define the corresponding strings aside from function `i18n_table`.  There are ways to reframe even `ngettext` and `eval_gettext` into the i18n\_table method but the extra work required may not be worth the effort.
 
 If you want to split localization resources into multiple groups, define and call an `i18n_table` function for each group because the extraction tool looks for that name specifically.
 
@@ -128,18 +128,23 @@ OPTIONS:
   --no-c2   Don't output [c2] lines.
   --test    Generate test translation.
 xgettext_OPTIONS:
-  Any xgettext(1) option.  Default presets: `-o - -LShell`
+  Any xgettext(1) option.  Default presets: -o - -LShell
 
 If the script includes a function named i18_table:
 [c1] Comment lines within the i18n_table body are reproduced with prefix "#."
 [c2] For lines starting with "read i18n_<string>" the i18n_<string> is
-     reproduced with prefix "#." above its corresponding MSGID.
+     prefixed with "#." and output above its corresponding MSGID.
 
 Location information is generated for lines [c0] and [c2] unless
 xgettext_OPTIONS includes option --no-location.
+
+Inside the `$(gettext -es ...)` block, a line that ends with "##" is ignored.
+A line that ends with "<<<##" marks the start of a block of ignored lines,
+which need not end with "##" themselves. The block ends at the next line that
+ends with ">>>##".
 ```
 
 ## Extras
 
-I have successfully used these tools with small to mid-sized shell scripting projects.  I do not know how it well they would work for larger scale scripting projects.  For my projects, which tend to have similar structures involving some shell and markdown files, I wrote a script to drive xgettext.sh in a repeatable way.  This script takes a configuration file that I customize for each new project. Take a look at [make-pot.sh](make-pot.sh) and [make-pot.cfg](make-pot.cfg).  You can reuse my make-pot files or develop your own variations.  Again, xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
+I have successfully used these tools with small to mid-sized shell scripting projects.  I do not know how well they could work for larger scale scripting projects.  For my projects, which tend to have similar structures involving some shell and markdown files, I wrote a script to drive xgettext.sh in a repeatable way.  This script takes a configuration file that I customize for each new project. Take a look at [make-pot.sh](make-pot.sh) and [make-pot.cfg](make-pot.cfg).  You can reuse my make-pot files or develop your own variations.  Again, xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
 
