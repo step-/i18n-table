@@ -4,7 +4,7 @@
 # xgettext.sh - augmented xgettext(1) extraction tool
 # (C)2016-2021, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20210501
+# Version: 20210615
 # =============================================================================
 
 # This file runs the standard xgettext command to extract MSGIDs from a shell
@@ -32,15 +32,20 @@ OPTIONS:
   --no-c2   Don't output [c2] lines.
   --test    Generate test translation.
 xgettext_OPTIONS:
-  Any xgettext(1) option.  Default presets: `-o - -LShell`
+  Any xgettext(1) option.  Default presets: -o - -LShell
 
 If the script includes a function named i18_table:
 [c1] Comment lines within the i18n_table body are reproduced with prefix "#."
 [c2] For lines starting with "read i18n_<string>" the i18n_<string> is
-     reproduced with prefix "#." above its corresponding MSGID.
+     prefixed with "#." and output above its corresponding MSGID.
 
 Location information is generated for lines [c0] and [c2] unless
 xgettext_OPTIONS includes option --no-location.
+
+Inside the `$(gettext -es ...)` block, a line that ends with "##" is ignored.
+A line that ends with "<<<##" marks the start of a block of ignored lines,
+which need not end with "##" themselves. The block ends at the next line that
+ends with ">>>##".
 EOF
 }
 
@@ -108,6 +113,8 @@ BEGIN {
   re_msgid_end            = @/"[ \t]*\\$/
   re_msgid_continuation   = @/\\$/
   re_msgid_ignore_line    = @/##$/
+  re_msgid_ignore_blk_on  = @/<<<##$/
+  re_msgid_ignore_blk_off = @/>>>##$/
 }
 
 $0 ~ re_gettext_es_start {
@@ -128,7 +135,13 @@ inside_gettext_es && $0 ~ re_gettext_es_end {
 inside_gettext_es {
   linenum = NR
   s = $0
-  if(s ~ re_msgid_ignore_line) {
+  if(s ~ re_msgid_ignore_blk_on) {
+    ignoring_block = 1
+  }
+  else if(s ~ re_msgid_ignore_blk_off) {
+    ignoring_block = 0
+  }
+  if(ignoring_block || s ~ re_msgid_ignore_line) {
     print "=#("s")" > logfile
     next
   }
