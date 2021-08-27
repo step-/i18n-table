@@ -1,5 +1,5 @@
 # This file is sourced not run
-# Version: 20210101 for POSIX shell.
+# Version: 20210827 for POSIX shell.
 
 # See README.md for instructions.  This is a sample file.
 
@@ -64,5 +64,5 @@ i18n_table
 
 # {EG} bind envvars of MSGIDs that are marked "{EG}" in i18_table()
 # Cf. gettext.sh's eval_gettext
-i18n_short_help=$(export hl1s hl1e; echo "$i18n_short_help" | envsubst "$i18n_short_help")
+i18n_eval_gettext_example=$(export hl1s hl1e; echo "$i18n_eval_gettext_example" | envsubst "$i18n_eval_gettext_example")
 
