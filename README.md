@@ -9,36 +9,35 @@ Minimal framework to speed up shell script translations
 
 ## Introduction
 
-It is a simple idea. Instead of running `gettext` many times--one for each localized string--your script can pack all strings together and run `gettext -es` only once.  This reduces start time proportionally to approx. `N * S`, where `N` is the number of `gettext` calls in your original script and `S` is the time it takes to spawn a sub-shell[:1].
+This is a simple idea: combining multiple runs of the same command into a single run to cut down on process execution overhead.  Instead of running `gettext` many times--one for each localized string--your script can pack all strings together and run `gettext -es` only once.  This reduces start time proportionally to approximately `N * S`, where `N` is the number of `gettext` calls in your original script and `S` is the time it takes to spawn a sub-shell.¹
 
-There are more benefits.  By keeping all localized strings in a single place, translators (and you) will clearly see the amount of work that needs to be done to localize your script.  It will be easier for you to engage occasional translators--volunteers who know a foreign language but don't know how to use translation tools or navigate a project tree. In this case all they need is to be handed the `i18n_table.sh` file for your script, and edit it with a text editor.
+Another possible benefit is easier engagement with human translators.  By keeping all localized strings in a single file you can give occasional translators just the `i18n_table.sh` file for your script, and tell them to edit it with a text editor.  They don't need more complex translation tools.
 
-If you love to script but can't be bothered learning how to create the translation template (".pot" file) that polished translators will use, `xgettext.sh` will help you extract _annotated_ resources from your script.
-
-[:1] `N * time(gettext) / time(gettext) = N` if `gettext` runs in the script's shell.  However, the typical gettext stanza is `var=$(gettext "string"), which spawns a sub-shell to run `gettext`, and that is where we get `S` from.
+If you are dealing with more sophisticated translators who know how to use the "GNU gettext" tools, and expect to be handed a ".pot" file, this project includes
+`xgettext.sh`, which will help you create an _annotated_ .pot file from your script.
 
 Some projects known to use these tools:
 
-* SMB-browser¹ for [fatdog64](http://distro.ibiblio.org/fatdog/web)
-* [find-n-run](https://github.com/step-/find-n-run)¹
-* fatdog-wireless-antenna¹ in [scripts-to-go](https://github.com/step-/scripts-to-go)
-* [f4](https://github.com/step-/f4)¹
+* SMB-browser² for [fatdog64](http://distro.ibiblio.org/fatdog/web)
+* [find-n-run](https://github.com/step-/find-n-run)²
+* fatdog-wireless-antenna² in [scripts-to-go](https://github.com/step-/scripts-to-go)
+* [f4](https://github.com/step-/f4)²
+* [desktop-wallpaper](https://github.com/step-/desktop-wallpaper)²
 
-¹ Disclosure: I am the author/maintainer of this project.  
+¹ `N * time(gettext) / time(gettext) = N` if `gettext` runs in the script's shell.  However, the typical gettext stanza is `var=$(gettext "string")`, which spawns a sub-shell to run `gettext`, and that is where we get `S` from.  
+² Disclosure: I am the author/maintainer of this project.  
 
 ## Should you use these tools in your project?
 
-If your script calls gettext just a couple of times, and you are only interested in speeding up start time, then no, you should not use these tools because even i18n\_table needs some time to run and do its job.  Likely, that time will be on a par to the time it takes to spawn gettext twice or so.  You will gain nothing.
+If your script calls `gettext` more than a couple of times, then time gains stack up, and you should try i18n\_table.  I recommend trying with a new project first because when i18n\_table is introduced as a afterthought your code must be restructured a bit -- something you might not be willing to do.  Read the next section to see what I mean.
 
-However, if your script calls gettext many times, then the gains stack up, and you should try i18n\_table.  I recommend trying with a new project first because when i18n\_table is introduced as a afterthought your code must be restructured a bit -- something you might not be willing to do.  Read the next section to see what I mean.
-
-If you are also interested in the other benefits I mentioned--enabling better translations and code development--then yes, you should try i18n\_table.
+If you are also interested in enabling easier translator engagements as I mentioned then you should try i18n\_table.
 
 ## Defining localization strings
 
 **[i18n_table.sh](i18n_table.sh)**
 
-This file shows a sample i18n\_table function and demostrates some common resource string usage cases.  You should adapt this file for your project then include function i18n\_table.  Include it either directly or indirectly by sourcing the file.  In the direct case generate the .pot file by running:
+This file shows a sample `i18n_table` function and demostrates some common resource string usage cases.  You should adapt the function for your project then add `i18n_table` to your script.  Include it either directly or indirectly by sourcing the file.  In the direct case generate the .pot file by running:
 
 ```sh
 xgettext.sh your-script-name > template.pot
@@ -52,7 +51,7 @@ The scripts and examples in this repository are intended to be compatible with t
 
 ### i18n_table function
 
-When you use i18n\_table rewrite your script and change each call to `$(gettext "string")` to a variable name referencing "string" in your i18n\_table.  For instance:
+When you use `i18n_table` rewrite your script and change each call to `$(gettext "string")` to a variable name referencing "string" in your `i18n_table`.  For instance:
 
 ```sh
 echo "$(gettext "Hello world!")"
@@ -83,13 +82,13 @@ echo "$i18n_hello_world"
 The function name, that is `i18n_table`, must be either the first word in a line or the second word when the first word is `function`.
 Each variable name, like `i18n_hello` in the example above, must start with `i18n_`.  The rest of the name is your choice.  I like to use something descriptive of the English text but any valid identifier will do.
 
-It is worth mentioning that your script _can_ also call `gettext` directly.  You are not required to organize _all_ localization strings in an i18n\_table.  For instance, if you need `ngettext` or `eval_gettext` it might be easier to define the corresponding strings aside from function `i18n_table`.  There are ways to reframe even `ngettext` and `eval_gettext` into the i18n\_table method but the extra work required may not be worth the effort.
+It is worth mentioning that your script _can_ also call `gettext` directly.  You are not required to move _all_ localization strings to your `i18n_table` function.  For instance, if you need `ngettext` or `eval_gettext` it might be easier to define the corresponding strings outside `i18n_table`.  There are ways to reframe even `ngettext` and `eval_gettext` into the i18n\_table method but the extra work required may not be worth the effort.
 
 If you want to split localization resources into multiple groups, define and call an `i18n_table` function for each group because the extraction tool looks for that name specifically.
 
 **Side note: bash arrays**
 
-Here is a magic sauce to read all strings into a bash array[:1][:2]:
+Here is a magic sauce to read all strings into a bash array¹'²:
 
 ```sh
 typeset -a i18n_array
@@ -104,16 +103,16 @@ $(gettext -es \
 EOF
 ```
 
-[:1] Why not using `mapfile`, `<( )`, `<<<`, `IFS=...`, etc. instead of a `read` loop?  I tried many variations, but I always come back to `read` to ensure that items don't include leading white space.
+¹ Why not using `mapfile`, `<( )`, `<<<`, `IFS=...`, etc. instead of a `read` loop?  I tried many variations, but I always come back to `read` to ensure that items don't include leading white space.
 
-[:2] Why the braces?  Indeed braces aren't needed; one could more simply write `while ... done << EOF`.  However, the extraction tool can annotate output with `i18n_` variable names, such as `i18n_array`, when it finds them _inside_ a pair of braces_.  That is why the magic sauce shows the braces.  If you don't need name annotations omit the braces altogether.  Moreover, an array will result in just one annotation, which isn't very useful anyway.
+² Why the braces?  Indeed braces aren't needed; one could more simply write `while ... done << EOF`.  However, the extraction tool can annotate output with `i18n_` variable names, such as `i18n_array`, when it finds them _inside_ a pair of braces_.  That is why the magic sauce shows the braces.  If you don't need name annotations omit the braces altogether.  Moreover, an array will result in just one annotation, which isn't very useful anyway.
 
 
 ## Extracting localization strings
 
 **[xgettext.sh](xgettext.sh)**
 
-Use xgettext.sh to generate a .pot file from your script.  You can also use xgettext.sh as a replacement for the standard xgettext command because xgettext.sh runs xgettext on the input file before extracting i18n\_table resources.  By default comments and location information are extracted from the function body, and resource strings are annotated with the variable name they refer to.  You can turn off comments and annotations via xgettext.sh command options.  To affect the standard xgettext run pass xgettext options to xgettext.sh.
+Use `xgettext.sh` to generate a .pot file from your script.  You can also use `xgettext.sh` as a replacement for the standard `xgettext` command because `xgettext.sh` runs `xgettext` on the input file before extracting strings from `i18n_table`.  By default comments and location information are extracted from the function body, and resource strings are annotated with the variable name they refer to.  You can turn off comments and annotations via `xgettext.sh` command options.  To affect the standard `xgettext` run pass `xgettext` options to `xgettext.sh`.
 
 **LIMITATION**
 
@@ -132,8 +131,8 @@ xgettext_OPTIONS:
 
 If the script includes a function named i18_table:
 [c1] Comment lines within the i18n_table body are reproduced with prefix "#."
-[c2] For lines starting with "read i18n_<string>" the i18n_<string> is
-     prefixed with "#." and output above its corresponding MSGID.
+[c2] For lines starting with "read i18n_<string>", i18n_<string> is
+     prefixed with "#." then output above its corresponding MSGID.
 
 Location information is generated for lines [c0] and [c2] unless
 xgettext_OPTIONS includes option --no-location.

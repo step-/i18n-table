@@ -36,8 +36,8 @@ xgettext_OPTIONS:
 
 If the script includes a function named i18_table:
 [c1] Comment lines within the i18n_table body are reproduced with prefix "#."
-[c2] For lines starting with "read i18n_<string>" the i18n_<string> is
-     prefixed with "#." and output above its corresponding MSGID.
+[c2] For lines starting with "read i18n_<string>", i18n_<string> is
+     prefixed with "#." then output above its corresponding MSGID.
 
 Location information is generated for lines [c0] and [c2] unless
 xgettext_OPTIONS includes option --no-location.
