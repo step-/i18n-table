@@ -63,7 +63,8 @@ EOF
 if ! i18n_table; then
 	echo >&2 "${0##*/}: error in i18n_table: possible causes:
 - invalid syntax
-- missing MSGID"
+- missing MSGID
+- MSGID doesn't end with \n"
 fi
 
 # {EG} bind envvars of MSGIDs that are marked "{EG}" in i18_table()
