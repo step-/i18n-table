@@ -1,6 +1,6 @@
 # i18n-table
 
-Minimal framework to speed up shell script translations
+Minimal framework to speed up translated shell scripts
 
 * Start a localized script faster with [i18n_table.sh](i18n_table.sh) and [xgettext.sh](xgettext.sh)
 * Enable occasional translators
