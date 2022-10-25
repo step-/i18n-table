@@ -1,5 +1,5 @@
 # This file is sourced not run
-# Version: 20210827 for POSIX shell.
+# Version: 20221024 for POSIX shell.
 
 # See README.md for instructions.  This is a sample file.
 
@@ -17,14 +17,14 @@ hl1s="<span bgcolor='$hl1'>" hl1e="</span>"
 
 # Notes for translators
 # ---------------------
+# A. Never use \n **inside** your MSGSTR. Swap \r for \n in yad/gtkdialog text.
+# B. However, always **end** your MSGSTR with \n.
+# C. Replace trailing spaces (U+0020) with no-break spaces (U+00A0).
+#
 # To create a pot file for this script use xgettext.sh[1] instead of xgettext.
 # xgettext.sh augments xgettext with the ability to extract MSGIDs from calls
 # to 'gettext -es'.
 # [1] https://github.com/step-/i18n-table
-#
-# A. Never use \n **inside** your MSGSTR. For yad and gtkdialog replace \n with \r.
-# B. However, always **end** your MSGSTR with \n.
-# C. Replace trailing spaces (U+0020) with no-break spaces (U+00A0).
 
 i18n_table() {
 # Cf. xgettext.sh usage:
@@ -34,11 +34,11 @@ i18n_table() {
 read i18n_markup_example
 # {EG} = post-process with "eval_gettext"
 read i18n_eval_gettext_example # {EG}
-read i18n_line_continuation_example
-# ANSI escape code
-read i18n_ansi_escape_code_example
+read i18n_four_line_continuation_example
 # spacer_example includes 5 non-breaking spaces
 read i18n_spacer_example
+# ANSI escape code
+read i18n_ansi_escape_code_example
 # https://en.wikipedia.org/wiki/Underscore#Unicode
 # combining macron below U+0331
 read i18n_macron_below_example
@@ -60,7 +60,11 @@ EOF
 }
 
 ## Create table
-i18n_table
+if ! i18n_table; then
+	echo >&2 "${0##*/}: error in i18n_table: possible causes:
+- invalid syntax
+- missing MSGID"
+fi
 
 # {EG} bind envvars of MSGIDs that are marked "{EG}" in i18_table()
 # Cf. gettext.sh's eval_gettext
