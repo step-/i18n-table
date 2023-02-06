@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # =============================================================================
-# xgettext.sh - augmented xgettext(1) extraction tool
-# (C)2016-2021, step - https://github.com/step-/i18n-table
+# xgettext.sh - xgettext-based extraction tool for i18n_table
+# (C)2016-2023, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20210615
+# Version: 20230206
 # =============================================================================
 
 # This file runs the standard xgettext command to extract MSGIDs from a shell
