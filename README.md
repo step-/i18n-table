@@ -88,7 +88,7 @@ If you want to split localization resources into multiple groups, define and cal
 
 **Side note: bash arrays**
 
-Here is a magic sauce to read all strings into a bash array¹'²:
+Here is magic sauce to read all strings into a bash array¹'²:
 
 ```sh
 typeset -a i18n_array
@@ -112,7 +112,7 @@ EOF
 
 **[xgettext.sh](xgettext.sh)**
 
-Use `xgettext.sh` to generate a .pot file from your script.  You can also use `xgettext.sh` as a replacement for the standard `xgettext` command because `xgettext.sh` runs `xgettext` on the input file before extracting strings from `i18n_table`.  By default comments and location information are extracted from the function body, and resource strings are annotated with the variable name they refer to.  You can turn off comments and annotations via `xgettext.sh` command options.  To affect the standard `xgettext` run pass `xgettext` options to `xgettext.sh`.
+Use `xgettext.sh` to generate a .pot file from your script.  By default comments and location information are extracted from the function body, and resource strings are annotated with the variable name they refer to.  You can turn off comments and annotations via `xgettext.sh` command options.  To affect the standard `xgettext` run pass `xgettext` options to `xgettext.sh`.
 
 **LIMITATION**
 
@@ -143,7 +143,14 @@ which need not end with "##" themselves. The block ends at the next line that
 ends with ">>>##".
 ```
 
-## Extras
+## Examples and extras
 
-I have successfully used these tools with small to mid-sized shell scripting projects.  I do not know how well they could work for larger scale scripting projects.  For my projects, which tend to have similar structures involving some shell and markdown files, I wrote a script to drive xgettext.sh in a repeatable way.  This script takes a configuration file that I customize for each new project. Take a look at [make-pot.sh](make-pot.sh) and [make-pot.cfg](make-pot.cfg).  You can reuse my make-pot files or develop your own variations.  Again, xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
+I have successfully used these tools with small to mid-sized shell scripting projects. My projects tend to have similar source tree structures for shell and markdown files. I wrote `make-pot.sh` - a script that generates a pot file using xgettext.sh.
 
+### make-pot.sh
+
+This [make-pot.sh](make-pot.sh) script takes a configuration file as input.  The supplied sample configuration file [cfg/make-pot.cfg](cfg/make-pot.cfg) can be copied and customized for each new project.
+
+Advanced feature not available with `Makefile`: extract gettext message IDs from markdown files (requires the `mdview` command).
+
+Note that using `make-pot.sh` is just an option because xgettext.sh is all you need to generate a .pot file for the i18n\_table function.

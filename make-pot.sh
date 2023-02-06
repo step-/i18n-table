@@ -13,7 +13,7 @@
 # where {PackageName} is a placeholder for the name of your project
 
 
-CONFIG=$1 # default ${0%.sh}.cfg
+CONFIG=$1 # default cfg/${0%.sh}.cfg
 
 # Read project configuration file {{{1
 # Stubs
@@ -21,10 +21,10 @@ md_is_to_be_translated() { :; }
 list_md_files() { :; }
 FPOT= XSRC= XOPT= XTBL= XXGT= XXGTOPT=
 
-[ -z "$CONFIG" ] && CONFIG="${0%.sh}.cfg"
+[ -z "$CONFIG" ] && CONFIG="cfg/${0%.sh}.cfg"
 if ! [ -r "$CONFIG" ]; then
   echo >&2 "${0##*/}: error: can't read configuration file '$CONFIG'.
-usage: ${0##*/} [config-file (default ${0%.sh}.cfg)]"
+usage: ${0##*/} [config-file (default cfg/${0%.sh}.cfg)]"
   exit 1
 fi
 . "$CONFIG"
