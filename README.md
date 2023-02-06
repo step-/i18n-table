@@ -145,7 +145,7 @@ ends with ">>>##".
 
 ## Examples and extras
 
-I have successfully used these tools with small to mid-sized shell scripting projects. My projects tend to have similar source tree structures for shell and markdown files. I wrote `make-pot.sh` - a script that generates a pot file using xgettext.sh.
+I have successfully used these tools with small to mid-sized shell scripting projects. My projects tend to have similar source tree structures for shell and markdown files. I wrote `make-pot.sh` - a script that generates a pot file using xgettext.sh. Alternatively, I use a `Makefile` for the same purpose. Both are included in the repo. You could adapt them for your own project.
 
 ### make-pot.sh
 
@@ -154,3 +154,11 @@ This [make-pot.sh](make-pot.sh) script takes a configuration file as input.  The
 Advanced feature not available with `Makefile`: extract gettext message IDs from markdown files (requires the `mdview` command).
 
 Note that using `make-pot.sh` is just an option because xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
+
+### Makefile
+
+The supplied sample [Makefile](Makefile) and [project.mk](project.mk) could be used instead of `make-pot.sh`.  Compared to the latter the makefiles are easier to configure and maintain. To configure, make a backup copy of `project.mk` then edit the basic settings in `project.mk` to reflect your project. You should not need to edit `Makefile`.
+
+Feature not available with `make-pot.sh`: insert comment block from a plain text file, like [com/default_notes.com](com/default_notes.com). Alternatively, `Makefile` can also insert comments from a `make-pot.cfg` configuration file, just like `make-pot.sh` can.
+
+Note that using `Makefile` is just an option because xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
