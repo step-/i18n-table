@@ -34,7 +34,7 @@ OPTIONS:
 xgettext_OPTIONS:
   Any xgettext(1) option.  Default presets: -o - -LShell
 
-If the script includes a function named i18_table:
+If the script includes a function named i18n_table:
 [c1] Comment lines within the i18n_table body are reproduced with prefix "#."
 [c2] For lines starting with "read i18n_<string>", i18n_<string> is
      prefixed with "#." then output above its corresponding MSGID.
@@ -194,7 +194,7 @@ BEGIN {
 }
 
 $0 ~ re_i18n_table {
-  print "line",NR,"start i18_table" > logfile
+  print "line",NR,"start i18n_table" > logfile
   inside_i18n_table = 1
 
   # some people write the function`s opening brace on a separate line
@@ -205,7 +205,7 @@ $0 ~ re_i18n_table {
 }
 
 inside_i18n_table && $0 ~ /^\}/ {
-  print "line",NR,"end i18_table" > logfile
+  print "line",NR,"end i18n_table" > logfile
   inside_i18n_table = 0
   next
 }

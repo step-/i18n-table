@@ -73,7 +73,7 @@ if ! i18n_table; then
 - MSGID doesn't end with \n"
 fi
 
-# {EG} bind envvars of MSGIDs that are marked "{EG}" in i18_table()
+# {EG} bind envvars of MSGIDs that are marked "{EG}" in i18n_table()
 # Cf. gettext.sh's eval_gettext
 i18n_eval_gettext_example=$(export hl1s hl1e; echo "$i18n_eval_gettext_example" | envsubst "$i18n_eval_gettext_example")
 

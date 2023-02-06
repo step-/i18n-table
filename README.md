@@ -73,7 +73,7 @@ EOF
 }
 
 # load resources
-i18_table
+i18n_table
 
 # use resources
 echo "$i18n_hello_world"
@@ -129,7 +129,7 @@ OPTIONS:
 xgettext_OPTIONS:
   Any xgettext(1) option.  Default presets: -o - -LShell
 
-If the script includes a function named i18_table:
+If the script includes a function named i18n_table:
 [c1] Comment lines within the i18n_table body are reproduced with prefix "#."
 [c2] For lines starting with "read i18n_<string>", i18n_<string> is
      prefixed with "#." then output above its corresponding MSGID.
