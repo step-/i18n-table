@@ -4,7 +4,7 @@
 # make-pot.sh - Create a GNU gettext .pot template file involving i18n_table
 # Copyright (C)2016-2023 step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20230206
+# Version: 20230614
 # Depends: GNU gawk, xgettext, xgettext.sh, mdview (only if markdown needed)
 # =============================================================================
 
@@ -37,8 +37,7 @@ export IENC OENC XOPT XXGTOPT
 
 mdview=mdview
 
-create_pot_file() # $1-pot-file $2...-xgettext-options {{{1
-{
+create_pot_file() { # $1-pot-file $2...-xgettext-options {{{1
   local f x fpot xopt
   fpot=$1; shift
   rm  -f "$fpot."*tmp
@@ -116,8 +115,7 @@ EOF
   return ${ERRORS:+1}
 }
 
-scan_source_file() # $1-filepath $2...-xgettext-options {{{1
-{
+scan_source_file() { # $1-filepath $2...-xgettext-options {{{1
   local f
   f=$1; shift &&
   echo >&2 "scan_source_file $f" &&
@@ -136,8 +134,7 @@ scan_source_file() # $1-filepath $2...-xgettext-options {{{1
     } #awk}}}'
 }
 
-scan_i18n_table_file() # $1-filepath $2...-xgettext-options {{{1
-{
+scan_i18n_table_file() { # $1-filepath $2...-xgettext-options {{{1
   local f sep
   f=$1; shift &&
   echo >&2 "scan_i18n_table_file $f" &&
@@ -146,8 +143,7 @@ scan_i18n_table_file() # $1-filepath $2...-xgettext-options {{{1
     "$XXGT" $XXGTOPT $sep "$@" --no-wrap "$f"
 }
 
-init_po_file() # $1-po(t)-OUTPUT-file $2...-xgettext-options {{{1
-{
+init_po_file() { # $1-po(t)-OUTPUT-file $2...-xgettext-options {{{1
   local f
   f=$1; shift
   env TZ="$PACKAGE_POT_CREATION_TZ" \
@@ -167,8 +163,7 @@ init_po_file() # $1-po(t)-OUTPUT-file $2...-xgettext-options {{{1
   $ a "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\\n"' "$f"
 }
 
-insert_notes() # {{{1
-{
+insert_notes() { # {{{1
   local f
   # Opening notes on pot file
   type __notes_on_pot_file >/dev/null 2>&1 &&
@@ -181,8 +176,7 @@ insert_notes() # {{{1
   done
 }
 
-insert_notes_on_file() # $1-filepath {{{1
-{
+insert_notes_on_file() { # $1-filepath {{{1
   local f x
   f=$1
   echo "
@@ -196,8 +190,7 @@ insert_notes_on_file() # $1-filepath {{{1
   type "$x" >/dev/null 2>&1 && "$x"
 }
 
-scan_md_file() # $1-in-filepath $2-out-filepath {{{1
-{
+scan_md_file() { # $1-in-filepath $2-out-filepath {{{1
   local in out pat
   in=$1 out=$2
   echo >&2 "$in"
@@ -241,4 +234,10 @@ if [ "${ERRORS}" ]; then
   echo >&2 "${0##*/}: ERRORS:${ERRORS}"
   exit 1
 fi
+
+# verify result
+
+printf "%s\n" "EXPERIMENTAL" "EXPERIMENTAL Verifing '$FPOT' ..." "EXPERIMENTAL"
+msgfmt -o - -vv -c "$FPOT" > /dev/null
+printf "%s\n" "Reminder:" "Reminder: Some errors and warnings above may not apply to your use case" "Reminder:"
 

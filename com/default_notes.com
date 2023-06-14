@@ -1,3 +1,5 @@
+#. Example of Plural-Forms valid for English; adapt to your target language:
+#.   "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Notes for translators
 #. ---------------------

@@ -4,7 +4,7 @@
 # xgettext.sh - xgettext-based extraction tool for i18n_table
 # (C)2016-2023, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20230206
+# Version: 20230614
 # =============================================================================
 
 # This file runs the standard xgettext command to extract MSGIDs from a shell
@@ -15,8 +15,7 @@
 # quotes only.  Single quotes and the `$''` syntax are not supported.
 # Contact me if you need this feature for your project.
 
-usage() # {{{1
-{
+usage() { # {{{1
   cat << 'EOF'
 Motivation:
 A single call to 'gettext -es' with multiple arguments is more efficient than
