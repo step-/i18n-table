@@ -1,8 +1,8 @@
 # =============================================================================
 # Makefile - sample Makefile for shell script containing i18n_table function
-# (C)2023, step - https://github.com/step-/i18n-table
+# (C)2023-2025, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20230206
+# Version: 2025.09.06
 # =============================================================================
 
 include project.mk

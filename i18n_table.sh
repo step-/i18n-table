@@ -2,9 +2,9 @@
 
 # =============================================================================
 # i18n_table.sh - sample i18n_table shell function
-# (C)2016-2023, step - https://github.com/step-/i18n-table
+# (C)2016-2025, step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20221024 for POSIX shell.
+# Version: 2025.09.06 for POSIX shell.
 # =============================================================================
 
 # See README.md for instructions.  This is a sample file.

@@ -2,9 +2,9 @@
 
 # =============================================================================
 # make-pot.sh - Create a GNU gettext .pot template file involving i18n_table
-# Copyright (C)2016-2023 step - https://github.com/step-/i18n-table
+# Copyright (C)2016-2025 step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
-# Version: 20230614
+# Version: 2025.09.06
 # Depends: GNU gawk, xgettext, xgettext.sh.
 # =============================================================================
 
