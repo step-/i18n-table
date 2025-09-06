@@ -7,44 +7,44 @@
 # Version: 20230614
 # =============================================================================
 
-# This file runs the standard xgettext command to extract MSGIDs from a shell
-# script file.  In addition it extracts MSGIDs from an occurrence of command
-# "gettext -es" that is found inside a function named "i18n_table".
-
-# LIMITATION: Currently, this script can parse strings delimited by double
-# quotes only.  Single quotes and the `$''` syntax are not supported.
-# Contact me if you need this feature for your project.
-
 usage() {
   cat << 'EOF'
-Motivation:
-A single call to 'gettext -es' with multiple arguments is more efficient than
-multiple calls to gettext with a single argument. Unfortunately, the standard
-xgettext(1) tool can't detect the MSGIDs when the shell command is `$(gettext
--es "msgid1"...)`.  This tool augments xgettext(1) with such capability.
+This script runs the `xgettext` command to extract MSGIDs from a shell
+file and also extracts MSGIDs from the `gettext -es` block within the
+user-defined i18n_table() function. By enabling developers to replace
+multiple scattered `gettext` calls with a single `gettext -es` run,
+i18n_table.sh can improve script startup speed.
+
+Limitation: Within i18n_table, xgettext.sh can parse double-quoted
+strings but not single-quoted or the $'' bash syntax.
 
 Usage: xgettext.sh [OPTIONS] ['--' xgettext_OPTIONS ...] FILE"
 
 OPTIONS:
   --help    Print this message and exit. See also xgettext --help.
-  --no-c1   Don't output [c1] lines.
-  --no-c2   Don't output [c2] lines.
-  --test    Generate test translation.
-xgettext_OPTIONS:
-  Any xgettext(1) option.  Default presets: -o - -LShell
+  --no-c1   Do not output [c1] lines ([c1] is defined below).
+  --no-c2   Do not output [c2] lines ([c2] is defined below).
+  --test    Generate a test translation.
 
-If the script includes a function named i18n_table:
-[c1] Comment lines within the i18n_table body are reproduced with prefix "#."
-[c2] For lines starting with "read i18n_<string>", i18n_<string> is
-     prefixed with "#." then output above its corresponding MSGID.
+The xgettext_OPTIONS environment variable may be used to pass options to
+the internal `xgettext` command invocation, defaulting to `-o - -LShell`.
 
-Location information is generated for lines [c0] and [c2] unless
-xgettext_OPTIONS includes option --no-location.
+If FILE includes a function named i18n_table then:
+[c1] Shell comment lines inside i18n_table will become "#." PO comments
+     before their corresponding MSGIDs.
+[c2] A "#. i18n_<string>" PO comment will be inserted before the
+     MSGID for each shell line that starts with "read i18n_<string>".
 
-Inside the `$(gettext -es ...)` block, a line that ends with "##" is ignored.
-A line that ends with "<<<##" marks the start of a block of ignored lines,
-which need not end with "##" themselves. The block ends at the next line that
-ends with ">>>##".
+If FILE contains an i18n_table function then:
+[c1] Shell comment lines inside i18n_table convert to "#." PO comments
+     before their MSGIDs.
+[c2] A "#. i18n_<identifier>" PO comment is added before the MSGID for
+    each shell line starting with "read i18n_<identifier>".
+
+In the `gettext -es` sub-shell, lines ending with "##" are ignored. A block of
+ignored lines starts with a line ending with "<<<##" and ends with the first
+line ending with ">>>##". Lines inside the block do not need to end with "##".
+
 EOF
 }
 
