@@ -15,7 +15,7 @@
 # quotes only.  Single quotes and the `$''` syntax are not supported.
 # Contact me if you need this feature for your project.
 
-usage() { # {{{1
+usage() {
   cat << 'EOF'
 Motivation:
 A single call to 'gettext -es' with multiple arguments is more efficient than
@@ -48,7 +48,7 @@ ends with ">>>##".
 EOF
 }
 
-# Parse options. {{{1
+# Parse options.
 # Option format: -x[=parm] | --opt-x[=parm]
 # Short options can't be combined together. Space can't substitute '=' before option value.
 unset opt_no_c1 opt_no_c2 opt_no_location
@@ -79,7 +79,10 @@ if ! [ -e "$script" ]; then
   exit 1
 fi
 
-# Standard xgettext run. {{{1
+###########################
+#  Standard xgettext run  #
+###########################
+
 xgettext ${IENC:+--from-code=$IENC} -L Shell "$@" -o - |
 if [ "$opt_test" ]; then
   sed -e 's/\(; charset=\)CHARSET/\1utf-8/' -e 's/^"Language: /&en/'
@@ -88,16 +91,21 @@ else
 fi |
 
 # erase the output for "gettext -es", if any
-awk '#{{{awk
+awk '
+###awk
 /^#:/ { buf = $0 }
 /^msgid "-es"$/ { getline; next } # erase this line, the one after and buf, if any
 $0 !~ /^#:/ { if(buf) {print buf} ; print; buf = ""
-} #awk}}}'
+}
+###awk'
 
-# Output for case $(gettext -es ...) {{{1
+#######################################
+#  Output for case $(gettext -es ...) #
+#######################################
+
 gawk -v NO_C1=$opt_no_c1 -v NO_C2=$opt_no_c2 \
-  -v NO_LOC=$opt_no_location -v TEST=$opt_test '#{{{gawk
-
+  -v NO_LOC=$opt_no_location -v TEST=$opt_test '
+###gawk
 BEGIN {
   logfile = "/dev/null"
   #logfile = "/dev/stderr"
@@ -196,7 +204,7 @@ $0 ~ re_i18n_table {
   print "line",NR,"start i18n_table" > logfile
   inside_i18n_table = 1
 
-  # some people write the function`s opening brace on a separate line
+  # sometimes the function opening brace is on a separate line
   if($0 !~ /\{/) {
     while(0 < getline && $0 !~ /^[ \t]*\{/)
       ;
@@ -235,6 +243,7 @@ inside_read_block {
       C2[nC2] = (NO_LOC ? "" : "#: "FILENAME":"NR "\n") "#. " substr(m, index(m, "i"))
       print "C2["nC2"]("C2[nC2]")" > logfile
     }
+
     # warn about gaps between "read i18n_" lines: these could be due to mispelling "i18n_"
     C2[nC2,"nr"] = NR
     if(nC2 > 1 && C2[nC2, "nr"] - C2[nC2 -1, "nr"] != 1) {
@@ -256,5 +265,5 @@ function emit_c0(location, line,   i) {
   if(TEST) { print "msgstr \"[T]"substr(line, 2) }
   else     { print "msgstr \"\"" }
 }
-#awk}}}
+###awk
 ' "$script"

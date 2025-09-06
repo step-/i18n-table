@@ -15,7 +15,7 @@
 
 CONFIG=$1 # default cfg/${0%.sh}.cfg
 
-# Read project configuration file {{{1
+# Read project configuration file
 # Stubs
 md_is_to_be_translated() { :; }
 list_md_files() { :; }
@@ -37,7 +37,7 @@ export IENC OENC XOPT XXGTOPT
 
 mdview=mdview
 
-create_pot_file() { # $1-pot-file $2...-xgettext-options {{{1
+create_pot_file() { # $1-pot-file $2...-xgettext-options
   local f x fpot xopt
   fpot=$1; shift
   rm  -f "$fpot."*tmp
@@ -115,7 +115,7 @@ EOF
   return ${ERRORS:+1}
 }
 
-scan_source_file() { # $1-filepath $2...-xgettext-options {{{1
+scan_source_file() { # $1-filepath $2...-xgettext-options
   local f
   f=$1; shift &&
   echo >&2 "scan_source_file $f" &&
@@ -127,14 +127,15 @@ scan_source_file() { # $1-filepath $2...-xgettext-options {{{1
     "$f" |
 
     # erase the output for "gettext -es", if any
-    awk '#{{{awk
+    awk '
+    ###awk
     /^#:/ { buf = $0 }
     /^msgid "-es"$/ { getline; next } # erase this line, the one after and buf, if any
-    $0 !~ /^#:/ { if(buf) {print buf} ; print; buf = ""
-    } #awk}}}'
+    $0 !~ /^#:/ { if(buf) {print buf} ; print; buf = "" }
+    ###awk'
 }
 
-scan_i18n_table_file() { # $1-filepath $2...-xgettext-options {{{1
+scan_i18n_table_file() { # $1-filepath $2...-xgettext-options
   local f sep
   f=$1; shift &&
   echo >&2 "scan_i18n_table_file $f" &&
@@ -143,7 +144,7 @@ scan_i18n_table_file() { # $1-filepath $2...-xgettext-options {{{1
     "$XXGT" $XXGTOPT $sep "$@" --no-wrap "$f"
 }
 
-init_po_file() { # $1-po(t)-OUTPUT-file $2...-xgettext-options {{{1
+init_po_file() { # $1-po(t)-OUTPUT-file $2...-xgettext-options
   local f
   f=$1; shift
   env TZ="$PACKAGE_POT_CREATION_TZ" \
@@ -163,7 +164,7 @@ init_po_file() { # $1-po(t)-OUTPUT-file $2...-xgettext-options {{{1
   $ a "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\\n"' "$f"
 }
 
-insert_notes() { # {{{1
+insert_notes() {
   local f
   # Opening notes on pot file
   type __notes_on_pot_file >/dev/null 2>&1 &&
@@ -176,7 +177,7 @@ insert_notes() { # {{{1
   done
 }
 
-insert_notes_on_file() { # $1-filepath {{{1
+insert_notes_on_file() { # $1-filepath
   local f x
   f=$1
   echo "
@@ -190,28 +191,33 @@ insert_notes_on_file() { # $1-filepath {{{1
   type "$x" >/dev/null 2>&1 && "$x"
 }
 
-scan_md_file() { # $1-in-filepath $2-out-filepath {{{1
+scan_md_file() { # $1-in-filepath $2-out-filepath
   local in out pat
   in=$1 out=$2
   echo >&2 "$in"
 
-  init_po_file "$out" || {
+  if ! init_po_file "$out"; then
     ERRORS="${ERRORS}
-    init_po_file '$in'"; return 1; }
+    init_po_file '$in'"
+    return 1
+  fi
 
   insert_notes_on_file "$in" >> "$out"
 
   if [ "$no_location" ]; then
-    set -x
     grep -vF "#: $in:" "$out" > "$out".tmp &&
     mv "$out".tmp "$out" || {
-    ERRORS="${ERRORS}
-   sed '$out'"; return 1; }
+      ERRORS="${ERRORS}
+      sed '$out'"
+      return 1
+    }
   fi
-  set +x
 
   # match xgettext's --no-location option, if configured
-  case "$XOPT$XXGTOPT" in *--no-location* ) pat='^\(msgid\|msgstr\) ' ;; * ) pat=.;; esac
+  case "$XOPT$XXGTOPT" in
+    *--no-location* ) pat='^\(msgid\|msgstr\) ' ;;
+    * ) pat=.;;
+  esac
 
   $mdview --po "$in" | grep "$pat" >> "$out" # || {
     #ERRORS="${ERRORS}
@@ -219,12 +225,14 @@ scan_md_file() { # $1-in-filepath $2-out-filepath {{{1
   # FIXME[mdview] mdview's stdout_output() doesn't exit(code) at all
 
   # Always run msguniq on text output by mdview --po
-  msguniq -t $OENC --no-wrap -i "$out" -o "$out" || {
+  if ! msguniq -t $OENC --no-wrap "$out" -o "$out"; then
     ERRORS="${ERRORS}
-   msguniq '$in'"; return 1; }
+   msguniq '$out'"
+   return 1
+  fi
 }
 
-# {{{1}}}
+### Main
 
 unset ERRORS
 

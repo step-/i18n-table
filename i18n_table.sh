@@ -1,4 +1,4 @@
-# This file is sourced not run
+# This file is to be sourced not run
 
 # =============================================================================
 # i18n_table.sh - sample i18n_table shell function
@@ -9,17 +9,18 @@
 
 # See README.md for instructions.  This is a sample file.
 
-# --- Early init ----------------------------------------------------------{{{1
+# --- Early init ----------------------------------------------------------
+
 ## text highlighter
 hl1='#fffbc6'
 
-# --- Init localization i18n ----------------------------------------------{{{1
+# --- Init localization i18n ----------------------------------------------
 
 export TEXTDOMAIN=fatdog OUTPUT_CHARSET=UTF-8
 # . gettext.sh
 hl1s="<span bgcolor='$hl1'>" hl1e="</span>"
 
-# --- Translation table i18n ----------------------------------------------{{{1
+# --- Translation table i18n ----------------------------------------------
 
 # Notes for translators
 # ---------------------
@@ -67,10 +68,8 @@ EOF
 
 ## Create table
 if ! i18n_table; then
-	echo >&2 "${0##*/}: error in i18n_table: possible causes:
-- invalid syntax
-- missing MSGID
-- MSGID doesn't end with \n"
+	printf >&2 '%s\n' "${0##*/}: error in i18n_table: possible causes:" \
+	'- invalid syntax' '- missing MSGID' '- MSGID doesn't end with \n'
 fi
 
 # {EG} bind envvars of MSGIDs that are marked "{EG}" in i18n_table()
