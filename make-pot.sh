@@ -247,6 +247,7 @@ fi
 # verify result
 
 printf "%s\n" "EXPERIMENTAL" "EXPERIMENTAL Verifing '$FPOT' ..." "EXPERIMENTAL"
-msgfmt -o - -vv -c "$FPOT" > /dev/null
+(set -x
+ msgfmt -o - -vv --check-format --check-domain "$FPOT" > /dev/null)
 printf "%s\n" "Reminder:" "Reminder: Some errors and warnings above may not apply to your use case" "Reminder:"
 
