@@ -5,7 +5,7 @@
 # Copyright (C)2016-2023 step - https://github.com/step-/i18n-table
 # License: GNU GPL3 or MIT
 # Version: 20230614
-# Depends: GNU gawk, xgettext, xgettext.sh, mdview (only if markdown needed)
+# Depends: GNU gawk, xgettext, xgettext.sh.
 # =============================================================================
 
 # Typically, this file resides in my development directory under
@@ -19,7 +19,7 @@ CONFIG=$1 # default cfg/${0%.sh}.cfg
 # Stubs
 md_is_to_be_translated() { :; }
 list_md_files() { :; }
-FPOT= XSRC= XOPT= XTBL= XXGT= XXGTOPT=
+FPOT= XSRC= XOPT= XTBL= XXGT= XXGTOPT= MD_MSGID_EXTRACTOR=
 
 [ -z "$CONFIG" ] && CONFIG="cfg/${0%.sh}.cfg"
 if ! [ -r "$CONFIG" ]; then
@@ -34,8 +34,6 @@ if ! [ -e "$XSRC" ] || [ "$XTBL" -a ! -e "$XTBL" ] || ! [ "$FPOT" ]; then
   exit 1
 fi
 export IENC OENC XOPT XXGTOPT
-
-mdview=mdview
 
 create_pot_file() { # $1-pot-file $2...-xgettext-options
   local f x fpot xopt
@@ -219,16 +217,19 @@ scan_md_file() { # $1-in-filepath $2-out-filepath
     * ) pat=.;;
   esac
 
-  $mdview --po "$in" | grep "$pat" >> "$out" # || {
-    #ERRORS="${ERRORS}
-    #$mdview '$in'"; return 1; }
-  # FIXME[mdview] mdview's stdout_output() doesn't exit(code) at all
+  if [ -n "$MD_MSGID_EXTRACTOR" ]; then
+    if ! $MD_MSGID_EXTRACTOR "$in" | grep "$pat" >> "$out"; then
+      ERRORS="${ERRORS}
+      $MD_MSGID_EXTRACTOR '$in'"
+      return 1
+    fi
 
-  # Always run msguniq on text output by mdview --po
-  if ! msguniq -t $OENC --no-wrap "$out" -o "$out"; then
-    ERRORS="${ERRORS}
-   msguniq '$out'"
-   return 1
+    # Always run msguniq on text output by $MD_MSGID_EXTRACTOR
+    if ! msguniq -t $OENC --no-wrap "$out" -o "$out"; then
+      ERRORS="${ERRORS}
+     msguniq '$out'"
+     return 1
+    fi
   fi
 }
 
