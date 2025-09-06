@@ -122,6 +122,8 @@ BEGIN {
   re_msgid_ignore_line    = @/##$/
   re_msgid_ignore_blk_on  = @/<<<##$/
   re_msgid_ignore_blk_off = @/>>>##$/
+  # escaped shell special characters
+  re_msgid_clean_escapes  = @/(\\\\)*\\[$`'\'']/
 }
 
 $0 ~ re_gettext_es_start {
@@ -133,6 +135,8 @@ $0 ~ re_gettext_es_start {
 inside_gettext_es && $0 ~ re_gettext_es_end {
   inside_gettext_es = 0
   print "line",NR,"end gettext_es block" > logfile
+  delete C1
+  nC1 = iC1 = 0
   delete C2
   nC2 = iC2 = 0
   next
@@ -233,10 +237,15 @@ inside_read_block {
   s = $0
   if(!NO_C1 && match(s, /^[ \t]*#/)) { # [c1]
     sub(/[ \t]*#/, "#.", s)
-    print s
+    curr_c1_comment = curr_c1_comment "\n" s
     print "comment("s")" > logfile
   }
   else if(match(s, /read[ \t]+i18n_[^ \t]+/)) { # [c2]
+    ++nC1
+    if (curr_c1_comment != "") {
+      C1[nC1] = substr(curr_c1_comment, 2)
+      curr_c1_comment = ""
+    }
     ++nC2
     if(!NO_C2) {
       m = substr(s, RSTART, RLENGTH)
@@ -257,13 +266,28 @@ inside_read_block {
 # emit_c0 prints a c0 line as well as any c1 and c2 lines that got accumulated
 # before the c0 line; line has exterior double quotes.
 function emit_c0(location, line,   i) {
+  line = clean_up_shell_escapes(line)
   print "emit("location")("line")" > logfile
   print ""
+  if(C1[++iC1]) { print C1[iC1] }
   if(C2[++iC2]) { print C2[iC2] }
   if(location) { print location }
   print "msgid "line
   if(TEST) { print "msgstr \"[T]"substr(line, 2) }
   else     { print "msgstr \"\"" }
 }
+
+# Remove backslashes used for shell escaping to prevent gettext
+# tools from terminating with fatal errors. For instance,
+# IN (shell): "Open \${FILE}" => OUT (MSGID) "Open ${FILE}".
+function clean_up_shell_escapes(s,   o) {
+  while (match(s, re_msgid_clean_escapes)) {
+    o = o substr(s, 1, RSTART + RLENGTH - 3) substr(s, RSTART + RLENGTH -1, 1)
+    s = substr(s, RSTART + RLENGTH)
+  }
+  o = o s
+  return o
+}
 ###awk
 ' "$script"
+
