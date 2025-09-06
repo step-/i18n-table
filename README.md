@@ -1,71 +1,92 @@
 # i18n-table
 
-Minimal framework to speed up translated shell scripts
-
-* Start a localized script faster with [i18n_table.sh](i18n_table.sh) and [xgettext.sh](xgettext.sh)
-* Enable occasional translators
-* Better organize translation resources
-* Decrease overhead
-
 ## Introduction
 
-This is a simple idea: combining multiple runs of the same command into a single run to cut down on process execution overhead.  Instead of running `gettext` many times--one for each localized string--your script can pack all strings together and run `gettext -es` only once.  This reduces start time proportionally to approximately `N * S`, where `N` is the number of `gettext` calls in your original script and `S` is the time it takes to spawn a sub-shell.¹
+The idea underlying this framework is simple:
+if you can combine multiple scattered calls of `gettext` in your script into a single command then your script's startup time will improve.
+This framework leads the developer to keeping all source strings inside the user-defined `i18n_table()` shell function.
+Such centralization helps code maintenance.
+Engagement with novice translators gets easier because they only need to text-edit the `i18n_table` function body.
+For expert translators using the "GNU gettext" tool suite and expecting to be handed a POT file,
+the framework provides developers with `xgettext.sh`,
+which extracts an annotated POT file from a shell script including the `i18n_table` function.
+The framework provides a `make-pot.sh` script for developers to help generate the POT file.
+A `Makefile` alternative is also included.
 
-Another possible benefit is easier engagement with human translators.  By keeping all localized strings in a single file you can give occasional translators just the `i18n_table.sh` file for your script, and tell them to edit it with a text editor.  They don't need more complex translation tools.
+## When Should You Use i18n-table To Speed Up Your Script?
 
-If you are dealing with more sophisticated translators who know how to use the "GNU gettext" tools, and expect to be handed a ".pot" file, this project includes
-`xgettext.sh`, which will help you create an _annotated_ .pot file from your script.
+Typically, scripts that create a (graphical) user interface can gain more speed.
+Usually the user interface contains many labels, all needing to be translated.
+This is how it is usually coded without i18n-table:
 
-Some projects known to use these tools:
+```sh
+echo "$(gettext "label A)"
+...
+echo "$(gettext "label Z)"
+```
 
-* SMB-browser² for [fatdog64](http://distro.ibiblio.org/fatdog/web)
-* [find-n-run](https://github.com/step-/find-n-run)²
-* fatdog-wireless-antenna² in [scripts-to-go](https://github.com/step-/scripts-to-go)
-* [f4](https://github.com/step-/f4)²
-* [desktop-wallpaper](https://github.com/step-/desktop-wallpaper)²
+And this is with i18n-table:
 
-¹ `N * time(gettext) / time(gettext) = N` if `gettext` runs in the script's shell.  However, the typical gettext stanza is `var=$(gettext "string")`, which spawns a sub-shell to run `gettext`, and that is where we get `S` from.  
-² Disclosure: I am the author/maintainer of this project.  
+```sh
+i18n_table() {
+{
+read i18n_label_A
+...
+read i18n_label_Z
+} << EOF
+$(gettext -es -- \
+"label A\n" \
+... \
+"label Z\n" \
+)
+EOF
+}
+i18n_table
+echo "$i18n_label_A"
+...
+echo "$i18n_label_Z"
+```
 
-## Should you use these tools in your project?
+I told you the underlying idea was simple!
+If your script calls `gettext` more than a few times, then gains stack up, and you should try i18n-table.
 
-If your script calls `gettext` more than a couple of times, then time gains stack up, and you should try i18n\_table.  I recommend trying with a new project first because when i18n\_table is introduced as a afterthought your code must be restructured a bit -- something you might not be willing to do.  Read the next section to see what I mean.
-
-If you are also interested in enabling easier translator engagements as I mentioned then you should try i18n\_table.
-
-## Defining localization strings
+## Defining Localization Strings
 
 **[i18n_table.sh](i18n_table.sh)**
 
-This file shows a sample `i18n_table` function and demostrates some common resource string usage cases.  You should adapt the function for your project then add `i18n_table` to your script.  Include it either directly or indirectly by sourcing the file.  In the direct case generate the .pot file by running:
+This file shows a sample `i18n_table` function and demonstrates some common resource string usage cases.
+You should adapt the function for your project then add `i18n_table` to your script.
+Include it either directly or indirectly by sourcing the file.
+In the direct case generate the POT file by running:
 
 ```sh
-xgettext.sh your-script-name > template.pot
+xgettext.sh your-script-name > your-script-name.pot
 ```
 
-In the sourced case adapt the extra files that are presented in section _Extra files_ further down.
+In the sourced case adapt the extra files presented in the [Extra Files] section.
 
-### POSIX shell
+### POSIX Shell
 
-The scripts and examples in this repository are intended to be compatible with the POSIX shell.  Extensions for bash are treated in side notes of the [README](README.md) file.
+This framework is compatible with the POSIX shell.
+Extensions for the bash shell are discussed in the [Bash Notes] section.
 
-### i18n_table function
+### The i18n_table Function
 
-When you use `i18n_table` rewrite your script and change each call to `$(gettext "string")` to a variable name referencing "string" in your `i18n_table`.  For instance:
+Conceptually you are rewriting your script replacing a call to `$(gettext "string")` with a variable referencing "string", and defining the variable in the `i18n_table` function.
 
 ```sh
 echo "$(gettext "Hello world!")"
 ```
 
-becomes
+Becomes
 
 ```sh
 # define resources
 i18n_table() {
-# reindent with care
-	{
-	read i18n_hello world
-	} << EOF
+# Better keep everything flush with the left margin.
+{
+read i18n_hello world
+} << EOF
 $(gettext -es -- \
 "Hello world!\n" \
 )
@@ -80,15 +101,18 @@ echo "$i18n_hello_world"
 ```
 
 The function name, that is `i18n_table`, must be either the first word in a line or the second word when the first word is `function`.
-Each variable name, like `i18n_hello` in the example above, must start with `i18n_`.  The rest of the name is your choice.  I like to use something descriptive of the English text but any valid identifier will do.
+Variable identifiers, like `i18n_hello` in the example above, must start with `i18n_`
 
-It is worth mentioning that your script _can_ also call `gettext` directly.  You are not required to move _all_ localization strings to your `i18n_table` function.  For instance, if you need `ngettext` or `eval_gettext` it might be easier to define the corresponding strings outside `i18n_table`.  There are ways to reframe even `ngettext` and `eval_gettext` into the i18n\_table method but the extra work required may not be worth the effort.
+Note your script _can_ still (occasionally) call `gettext` directly.
+You script will benefit as long as the bulk of your localization strings is defined within `i18n_table`.
+For instance, if you need `ngettext` it might be easier to define the corresponding strings outside `i18n_table`.
+There are ways to reframe even `ngettext` to this framework but the extra work may not be worth the effort.
 
-If you want to split localization resources into multiple groups, define and call an `i18n_table` function for each group because the extraction tool looks for that name specifically.
+If you want to split localization resources into multiple files, define and call an `i18n_table` function in each file because the extraction tool looks specifically for that name.
 
-**Side note: bash arrays**
+### Bash Notes
 
-Here is magic sauce to read all strings into a bash array¹'²:
+Here is an example of how to read all strings into a bash array.
 
 ```sh
 typeset -a i18n_array
@@ -103,62 +127,50 @@ $(gettext -es \
 EOF
 ```
 
-¹ Why not using `mapfile`, `<( )`, `<<<`, `IFS=...`, etc. instead of a `read` loop?  I tried many variations, but I always come back to `read` to ensure that items don't include leading white space.
+Why not using `mapfile`, `<( )`, `<<<`, `IFS=...`, etc. instead of a `read` loop?
+I tried many variations, but I always come back to `read` to ensure that items do not include leading white space.
 
-² Why the braces?  Indeed braces aren't needed; one could more simply write `while ... done << EOF`.  However, the extraction tool can annotate output with `i18n_` variable names, such as `i18n_array`, when it finds them _inside_ a pair of braces_.  That is why the magic sauce shows the braces.  If you don't need name annotations omit the braces altogether.  Moreover, an array will result in just one annotation, which isn't very useful anyway.
+Why the braces?
+Indeed braces are not necessary and one could write just the `while ... done << EOF` loop.
+However, `xgettext.sh` looks for the paired braces to decide to annotate `i18n_`-prefixed identifiers, such as `i18n_array`.
 
-
-## Extracting localization strings
+## Extracting Localization Strings
 
 **[xgettext.sh](xgettext.sh)**
 
-Use `xgettext.sh` to generate a .pot file from your script.  By default comments and location information are extracted from the function body, and resource strings are annotated with the variable name they refer to.  You can turn off comments and annotations via `xgettext.sh` command options.  To affect the standard `xgettext` run pass `xgettext` options to `xgettext.sh`.
+Use `xgettext.sh` to generate a POT file from your script.
+By default comments and location information are extracted from the function body,
+and resource strings are annotated with the variable name they refer to.
+You can turn off comments and annotations via `xgettext.sh` command options.
+To affect the standard `xgettext` run, pass `xgettext` options to `xgettext.sh` or set the `xgettext_OPTIONS` environment variable.
 
-**LIMITATION**
+See also `xgettext.sh --help`.
 
-**Currently, xgettext.sh is able to parse strings delimited by double quotes only.  Single quotes and the `$''` syntax are not supported. Contact me if you need this feature for your project.**
-
-```
-Usage: xgettext.sh [OPTIONS] ['--' xgettext_OPTIONS ...] FILE"
-
-OPTIONS:
-  --help    Print this message and exit. See also xgettext --help.
-  --no-c1   Don't output [c1] lines.
-  --no-c2   Don't output [c2] lines.
-  --test    Generate test translation.
-xgettext_OPTIONS:
-  Any xgettext(1) option.  Default presets: -o - -LShell
-
-If the script includes a function named i18n_table:
-[c1] Comment lines within the i18n_table body are reproduced with prefix "#."
-[c2] For lines starting with "read i18n_<string>", i18n_<string> is
-     prefixed with "#." then output above its corresponding MSGID.
-
-Location information is generated for lines [c0] and [c2] unless
-xgettext_OPTIONS includes option --no-location.
-
-Inside the `$(gettext -es ...)` block, a line that ends with "##" is ignored.
-A line that ends with "<<<##" marks the start of a block of ignored lines,
-which need not end with "##" themselves. The block ends at the next line that
-ends with ">>>##".
-```
-
-## Examples and extras
+## Extra Files
 
 I have successfully used these tools with small to mid-sized shell scripting projects. My projects tend to have similar source tree structures for shell and markdown files. I wrote `make-pot.sh` - a script that generates a pot file using xgettext.sh. Alternatively, I use a `Makefile` for the same purpose. Both are included in the repo. You could adapt them for your own project.
 
-### make-pot.sh
+### The make-pot.sh Script
 
-This [make-pot.sh](make-pot.sh) script takes a configuration file as input.  The supplied sample configuration file [cfg/make-pot.cfg](cfg/make-pot.cfg) can be copied and customized for each new project.
+The [make-pot.sh](make-pot.sh) script takes a configuration file as input.
+The supplied sample configuration file [cfg/make-pot.cfg](cfg/make-pot.cfg) can be copied and customized for each new project.
 
-Advanced feature not available with `Makefile`: extract gettext message IDs from markdown files (requires the `mdview` command).
+Note `make-pot.sh` is optional because `xgettext.sh` is able to generate the POT file.
+However, with `make-pot.sh` developers can automate the following extra tasks so they do not need to do them manually:
+- Filling the POT header with your project meta data
+- De-duplicating and cleaning up the POT file
+- Inserting a custom comment block, such as [com/default_notes.com](com/default_notes.com)
+- Running a user-supplied markdown extractor to merge the extracted MSGIDs into the POT file.
 
-Note that using `make-pot.sh` is just an option because xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
+### The Makefile Alternative
 
-### Makefile
+The sample [Makefile](Makefile) and [project.mk](project.mk) files can be used instead of `make-pot.sh`.
+Compared to the latter the `Makefile` is easier to configure and maintain.
+However, it lacks the following extra features:
+- Inserting a custom comment block
+- Merging markdown MSGIDs into the POT file.
 
-The supplied sample [Makefile](Makefile) and [project.mk](project.mk) could be used instead of `make-pot.sh`.  Compared to the latter the makefiles are easier to configure and maintain. To configure, make a backup copy of `project.mk` then edit the basic settings in `project.mk` to reflect your project. You should not need to edit `Makefile`.
+To use the `Makefile`, make a backup copy of `project.mk` then edit the basic settings in `project.mk` to reflect your project.
+You should not need to edit the `Makefile` itself.
 
-Feature not available with `make-pot.sh`: insert comment block from a plain text file, like [com/default_notes.com](com/default_notes.com). Alternatively, `Makefile` can also insert comments from a `make-pot.cfg` configuration file, just like `make-pot.sh` can.
-
-Note that using `Makefile` is just an option because xgettext.sh is all you need to generate a .pot file for the i18n\_table function.
+Note `Makefile` is optional because `xgettext.sh` is able to generate the POT file.
