@@ -95,20 +95,40 @@ EOF
         sed -n -e "$2 p" "$1"
       done >&2
   fi
-  # -------------------------------------------------------------------
-  # Delete annoyances
-  # - path prefix leading to /usr, e.g. <...prefix...>/usr/...
-  # - sundry
-  sed -e "
-    /^#: /{s~ .*/usr/~ /usr/~g}
-    /#-#-#-#-#/d
-    " "$fpot.tmp" ||
-    ERRORS="${ERRORS}
-  sed"
-  #  s~^#:.*'"$PACKAGE_NAME"'~#: ~
+  cat "$fpot.tmp"
 
   # In case of errors keep temp files for inspection
   ! [ "$ERRORS" ] && rm  -f "$fpot."*tmp
+
+  return ${ERRORS:+1}
+}
+
+clean_up_pot_file() { # $1-filepath
+  local f="${1:?}"
+
+  # De-duplicate MSGIDs
+  awk '
+  ###awk
+  # Replace plain comments with #. comments to avoid msguniq cumulating them
+  /^#[ \t]/ { print "#." substr($0, 2); next }
+  # Replace temporary unique MSGID/MSGSTR for empty lines to avoid removal
+  /^[ \t]*$/ { print "msgid \"" NR "\"\nmsgstr \"\""; next }
+  { print; next }
+  ###awk' "$f" | msguniq -t $OENC --no-wrap -o "$f" - ||
+    ERRORS="${ERRORS}
+    awk '$f' | msguniq"
+
+  # Reduce output noise
+  sed -i -e "
+    # undo temporary MSGID/MSGSTR
+    /^msgid \"[0-9]\+\"$/{N;N;d}
+    # shorten path prefix leading to /usr, e.g. <...prefix...>/usr/...
+    /^#: /{s~ .*/usr/~ /usr/~g}
+    # comments added by msguniq
+    /#-#-#-#-#/d
+    " "$f" ||
+    ERRORS="${ERRORS}
+  sed '$f'"
 
   return ${ERRORS:+1}
 }
@@ -158,6 +178,8 @@ init_po_file() { # $1-po(t)-OUTPUT-file $2...-xgettext-options
     s~FIRST AUTHOR.*$~'"$PACKAGE_FIRST_POT_AUTHOR"'~
     s~Language: ~&'"$PACKAGE_POT_LANGUAGE"'~
     s~=CHARSET~='"$PACKAGE_CHARSET"'~
+    s~^# ~#. ~
+    s~^#$~#. ___________________________________________________________________________~
   }
   $ a "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\\n"' "$f"
 }
@@ -237,7 +259,8 @@ scan_md_file() { # $1-in-filepath $2-out-filepath
 
 unset ERRORS
 
-create_pot_file "$FPOT" $XOPT > "$FPOT"
+create_pot_file "$FPOT" $XOPT > "$FPOT" &&
+clean_up_pot_file "$FPOT"
 
 if [ "${ERRORS}" ]; then
   echo >&2 "${0##*/}: ERRORS:${ERRORS}"
