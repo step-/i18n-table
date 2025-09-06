@@ -38,6 +38,8 @@ clean:
 	s~FIRST AUTHOR.*$$~'"$(PACKAGE_FIRST_POT_AUTHOR)"'~
 	s~Language: ~&'"$(PACKAGE_POT_LANGUAGE)"'~
 	s~=CHARSET~='"$(PACKAGE_CHARSET)"'~
+	s~^# ~#. ~
+	s~^#$~#. ___________________________________________________________________________~
 	}
 	$$ a "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\\n"' > $@
 
@@ -89,12 +91,21 @@ endif
 # with mdview use make-pot.sh instead of this Makefile
 
 %.new.pot : %.pot.hdr %.pot.rem %.pot.xgt %.pot.xxgt
-	@cat $+ |
-	# Delete annoyances
-	# - path prefix leading to /usr, e.g. <...prefix...>/usr/...
-	# - sundry
-	sed -e '
+	# Delete duplicate MSGIDs
+	@awk '
+	# Replace plain comments with #. comments to avoid msguniq cumulating them
+	/^#[ \t]/ { print "#." substr($$0, 2); next }
+	# Replace temporary unique MSGID/MSGSTR for empty lines to avoid removal
+	/^[ \t]*$$/ { print "msgid \"" NR "\"\nmsgstr \"\""; next }
+	{ print; next }
+	' $+ | msguniq -t $(OUTPUT_ENCODING) --no-wrap -o $@ -
+	# Reduce output noise
+	@sed -i -e '
+	# undo temporary MSGID/MSGSTR
+	/^msgid "[0-9]+"$$/{N;N;d}
+	# shorten path prefix leading to /usr, e.g. <...prefix...>/usr/...
 	/^#: /{s~ .*/usr/~ /usr/~g}
+	# comments added by msguniq
 	/#-#-#-#-#/d
-	' > $@
+	' $@
 
